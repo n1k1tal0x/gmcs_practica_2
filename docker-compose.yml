@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:15.17
+    container_name: marathon-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: health_marathon
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d health_marathon"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

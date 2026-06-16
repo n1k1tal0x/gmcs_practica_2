@@ -1,0 +1,1 @@
+Task 1: Сделал в docker-compose, запускает postgres и импортирует dump
