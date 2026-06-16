@@ -4,7 +4,7 @@ services:
     container_name: marathon-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: health_marathon
+      POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
