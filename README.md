@@ -351,3 +351,59 @@ LIMIT 10;
 #### SubTask 7.8:
 
 Всё тоже самое, что и в 7.7, только не `BanisterTRIMP`, а `EstimatedPaeeKcal`
+
+#### SubTask 7.9:
+
+Занейронил данные, в дампе их нема
+
+Запрос:
+```SQL
+WITH activity_posts AS (
+    SELECT
+        pae."Id" AS activity_id,
+        pae."ActivityDate",
+        pae."EstimatedPaeeKcal",
+        pae."BanisterTRIMP",
+        p."Id" AS post_id,
+        p."Title",
+        p."Description"
+    FROM "PhysicalActivityEntries" pae
+    JOIN "Posts" p
+        ON p."PhysicalActivityEntryId" = pae."Id"
+    WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
+),
+post_likes AS (
+    SELECT
+        ap.activity_id,
+        ap."ActivityDate",
+        ap."EstimatedPaeeKcal",
+        ap."BanisterTRIMP",
+        ap.post_id,
+        ap."Title",
+        ap."Description",
+        COUNT(pl."UserId") AS likes_count
+    FROM activity_posts ap
+    LEFT JOIN "PostLikes" pl
+        ON pl."PostId" = ap.post_id
+    GROUP BY
+        ap.activity_id,
+        ap."ActivityDate",
+        ap."EstimatedPaeeKcal",
+        ap."BanisterTRIMP",
+        ap.post_id,
+        ap."Title",
+        ap."Description"
+)
+SELECT
+    activity_id,
+    post_id,
+    'http://sitename/posts/' || post_id AS post_url,
+    "Title",
+    "ActivityDate",
+    "EstimatedPaeeKcal",
+    "BanisterTRIMP",
+    likes_count
+FROM post_likes
+ORDER BY likes_count DESC, "ActivityDate" DESC
+LIMIT 100;
+```
