@@ -197,3 +197,52 @@ ORDER BY t.team_name, d.day;
 #### SubTask 7.2:
 
 Всё тоже самое, что и в 7.1, только не `BanisterTRIMP`, а `EstimatedPaeeKcal`
+
+#### SubTask 7.3:
+
+Вот запрос:
+```SQL
+WITH marathon AS (
+    SELECT
+        m."Id",
+        m."StartDate"::date AS start_date,
+        m."EndDate"::date AS end_date
+    FROM "Marathons" m
+    WHERE m."Id" = 1
+),
+team_members AS (
+    SELECT
+        t."Id" AS team_id,
+        t."Name" AS team_name,
+        ut."MembersId" AS user_id
+    FROM "Teams" t
+    JOIN marathon m ON t."MarathonId" = m."Id"
+    JOIN "UserTeam" ut ON ut."TeamId" = t."Id"
+),
+team_trimp AS (
+    SELECT
+        tm.team_id,
+        tm.team_name,
+        SUM(pae."BanisterTRIMP") AS trimp_sum
+    FROM team_members tm
+    JOIN "PhysicalActivityEntries" pae
+        ON pae."UserId" = tm.user_id
+    JOIN marathon m
+        ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
+    GROUP BY tm.team_id, tm.team_name
+)
+SELECT
+    team_id,
+    team_name,
+    trimp_sum
+FROM team_trimp
+ORDER BY trimp_sum DESC, team_name
+LIMIT 10;
+```
+
+Я не использовал тот же график, что и на скриншоте к заданию, а использовал обычную гистограмму т.к. не понятно какие ещё данные брать для линий графиков
+
+#### SubTask 7.4:
+
+Всё тоже самое, что и в 7.3, только не `BanisterTRIMP`, а `EstimatedPaeeKcal`
