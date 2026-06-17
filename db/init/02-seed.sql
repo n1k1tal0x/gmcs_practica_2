@@ -173,7 +173,175 @@ CROSS JOIN team_members tm
 JOIN templates t ON t.user_id = tm.user_id
 ORDER BY d.marathon_id, d.day, tm.team_id, tm.user_id;
 
+INSERT INTO public."Posts" (
+    "Id",
+    "CreatedOn",
+    "OrganizationId",
+    "MarathonId",
+    "AuthorUserId",
+    "Title",
+    "Description",
+    "PublishOn",
+    "IsPinned",
+    "IsActive",
+    "PhysicalActivityEntryId"
+) VALUES
+    (
+        21,
+        TIMESTAMPTZ '2026-03-15 10:00:00+00',
+        1,
+        1,
+        5,
+        'Team North старт марафона',
+        'Публикация к первой тренировке Team North.',
+        TIMESTAMPTZ '2026-03-15 10:05:00+00',
+        FALSE,
+        TRUE,
+        (
+            SELECT pae."Id"
+            FROM public."PhysicalActivityEntries" pae
+            JOIN public."UserTeam" ut ON ut."MembersId" = pae."UserId"
+            JOIN public."Teams" t ON t."Id" = ut."TeamId"
+            WHERE t."Id" = 6
+              AND pae."ActivityDate"::date = DATE '2026-03-15'
+            ORDER BY pae."Id"
+            LIMIT 1
+        )
+    ),
+    (
+        22,
+        TIMESTAMPTZ '2026-03-25 10:00:00+00',
+        1,
+        1,
+        7,
+        'Team Tempo mid run',
+        'Публикация к тренировке Team Tempo в середине марафона.',
+        TIMESTAMPTZ '2026-03-25 10:05:00+00',
+        FALSE,
+        TRUE,
+        (
+            SELECT pae."Id"
+            FROM public."PhysicalActivityEntries" pae
+            JOIN public."UserTeam" ut ON ut."MembersId" = pae."UserId"
+            JOIN public."Teams" t ON t."Id" = ut."TeamId"
+            WHERE t."Id" = 7
+              AND pae."ActivityDate"::date = DATE '2026-03-25'
+            ORDER BY pae."Id"
+            LIMIT 1
+        )
+    ),
+    (
+        23,
+        TIMESTAMPTZ '2026-06-01 09:00:00+00',
+        1,
+        2,
+        5,
+        'Team Sirius opens summer pace',
+        'Летняя публикация к первому дню марафона Summer Pace Marathon.',
+        TIMESTAMPTZ '2026-06-01 09:05:00+00',
+        FALSE,
+        TRUE,
+        (
+            SELECT pae."Id"
+            FROM public."PhysicalActivityEntries" pae
+            JOIN public."UserTeam" ut ON ut."MembersId" = pae."UserId"
+            JOIN public."Teams" t ON t."Id" = ut."TeamId"
+            WHERE t."Id" = 2
+              AND pae."ActivityDate"::date = DATE '2026-06-01'
+            ORDER BY pae."Id"
+            LIMIT 1
+        )
+    ),
+    (
+        24,
+        TIMESTAMPTZ '2026-06-10 09:00:00+00',
+        1,
+        2,
+        7,
+        'Team Vector progress',
+        'Пост о тренировке Team Vector в середине летнего марафона.',
+        TIMESTAMPTZ '2026-06-10 09:05:00+00',
+        FALSE,
+        TRUE,
+        (
+            SELECT pae."Id"
+            FROM public."PhysicalActivityEntries" pae
+            JOIN public."UserTeam" ut ON ut."MembersId" = pae."UserId"
+            JOIN public."Teams" t ON t."Id" = ut."TeamId"
+            WHERE t."Id" = 3
+              AND pae."ActivityDate"::date = DATE '2026-06-10'
+            ORDER BY pae."Id"
+            LIMIT 1
+        )
+    ),
+    (
+        25,
+        TIMESTAMPTZ '2026-09-01 09:00:00+00',
+        1,
+        3,
+        9,
+        'Team Pulse opens autumn finish',
+        'Публикация к первому дню марафона Autumn Finish Marathon.',
+        TIMESTAMPTZ '2026-09-01 09:05:00+00',
+        FALSE,
+        TRUE,
+        (
+            SELECT pae."Id"
+            FROM public."PhysicalActivityEntries" pae
+            JOIN public."UserTeam" ut ON ut."MembersId" = pae."UserId"
+            JOIN public."Teams" t ON t."Id" = ut."TeamId"
+            WHERE t."Id" = 4
+              AND pae."ActivityDate"::date = DATE '2026-09-01'
+            ORDER BY pae."Id"
+            LIMIT 1
+        )
+    ),
+    (
+        26,
+        TIMESTAMPTZ '2026-09-12 09:00:00+00',
+        1,
+        3,
+        11,
+        'Team Storm strong day',
+        'Пост о сильной тренировке Team Storm в Autumn Finish Marathon.',
+        TIMESTAMPTZ '2026-09-12 09:05:00+00',
+        FALSE,
+        TRUE,
+        (
+            SELECT pae."Id"
+            FROM public."PhysicalActivityEntries" pae
+            JOIN public."UserTeam" ut ON ut."MembersId" = pae."UserId"
+            JOIN public."Teams" t ON t."Id" = ut."TeamId"
+            WHERE t."Id" = 5
+              AND pae."ActivityDate"::date = DATE '2026-09-12'
+            ORDER BY pae."Id"
+            LIMIT 1
+        )
+    );
+
+INSERT INTO public."PostLikes" ("PostId", "UserId", "CreatedOn") VALUES
+    (21, 1, TIMESTAMPTZ '2026-03-15 11:00:00+00'),
+    (21, 2, TIMESTAMPTZ '2026-03-15 11:05:00+00'),
+    (21, 3, TIMESTAMPTZ '2026-03-15 11:10:00+00'),
+    (21, 4, TIMESTAMPTZ '2026-03-15 11:15:00+00'),
+    (22, 1, TIMESTAMPTZ '2026-03-25 11:00:00+00'),
+    (22, 2, TIMESTAMPTZ '2026-03-25 11:05:00+00'),
+    (22, 3, TIMESTAMPTZ '2026-03-25 11:10:00+00'),
+    (23, 1, TIMESTAMPTZ '2026-06-01 10:00:00+00'),
+    (23, 4, TIMESTAMPTZ '2026-06-01 10:05:00+00'),
+    (23, 5, TIMESTAMPTZ '2026-06-01 10:10:00+00'),
+    (23, 6, TIMESTAMPTZ '2026-06-01 10:15:00+00'),
+    (24, 2, TIMESTAMPTZ '2026-06-10 10:00:00+00'),
+    (24, 5, TIMESTAMPTZ '2026-06-10 10:05:00+00'),
+    (25, 1, TIMESTAMPTZ '2026-09-01 10:00:00+00'),
+    (25, 2, TIMESTAMPTZ '2026-09-01 10:05:00+00'),
+    (25, 3, TIMESTAMPTZ '2026-09-01 10:10:00+00'),
+    (25, 4, TIMESTAMPTZ '2026-09-01 10:15:00+00'),
+    (25, 5, TIMESTAMPTZ '2026-09-01 10:20:00+00'),
+    (26, 1, TIMESTAMPTZ '2026-09-12 10:00:00+00');
+
 SELECT pg_catalog.setval('public."Users_Id_seq"', 12, true);
 SELECT pg_catalog.setval('public."Marathons_Id_seq"', 3, true);
 SELECT pg_catalog.setval('public."Teams_Id_seq"', 7, true);
 SELECT pg_catalog.setval('public."PhysicalActivityEntries_Id_seq"', 1000, true);
+SELECT pg_catalog.setval('public."Posts_Id_seq"', 26, true);
