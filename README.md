@@ -407,3 +407,36 @@ FROM post_likes
 ORDER BY likes_count DESC, "ActivityDate" DESC
 LIMIT 100;
 ```
+
+#### SubTask 7.10:
+
+Запрос:
+```SQL
+WITH marathon AS (
+    SELECT
+        m."Id",
+        m."StartDate"::date AS start_date,
+        m."EndDate"::date AS end_date
+    FROM "Marathons" m
+    WHERE m."Name" = {{marathon_name}}
+)
+SELECT
+    pae."Id" AS activity_id,
+    pae."ActivityDate",
+    pae."UserId",
+    u."FirstName",
+    u."LastName",
+    pae."PhysicalActivityTypeId",
+    pat."Name" AS activity_type_name,
+    pae."EstimatedPaeeKcal",
+    pae."BanisterTRIMP"
+FROM "PhysicalActivityEntries" pae
+JOIN marathon m
+    ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+JOIN "Users" u
+    ON u."Id" = pae."UserId"
+LEFT JOIN "PhysicalActivityTypes" pat
+    ON pat."Id" = pae."PhysicalActivityTypeId"
+WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
+ORDER BY pae."ActivityDate" DESC, pae."Id" DESC;
+```
