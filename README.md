@@ -246,3 +246,108 @@ LIMIT 10;
 #### SubTask 7.4:
 
 Всё тоже самое, что и в 7.3, только не `BanisterTRIMP`, а `EstimatedPaeeKcal`
+
+#### SubTask 7.5:
+
+Запрос:
+```SQL
+WITH marathon AS (
+    SELECT
+        m."Id",
+        m."StartDate"::date AS start_date,
+        m."EndDate"::date AS end_date
+    FROM "Marathons" m
+    WHERE m."Name" = 'Summer Pace Marathon'
+),
+participant_members AS (
+    SELECT DISTINCT
+        ut."MembersId" AS user_id
+    FROM "Teams" t
+    JOIN "UserTeam" ut ON ut."TeamId" = t."Id"
+    JOIN marathon m ON m."Id" = t."MarathonId"
+),
+participant_trimp AS (
+    SELECT
+        pm.user_id,
+        SUM(pae."BanisterTRIMP") AS trimp_sum
+    FROM participant_members pm
+    JOIN "PhysicalActivityEntries" pae
+        ON pae."UserId" = pm.user_id
+    JOIN marathon m
+        ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
+    GROUP BY pm.user_id
+)
+SELECT
+    u."Id" AS user_id,
+    u."FirstName",
+    u."LastName",
+    u."Email",
+    COALESCE(pt.trimp_sum, 0) AS trimp_sum
+FROM participant_members pm
+JOIN "Users" u ON u."Id" = pm.user_id
+LEFT JOIN participant_trimp pt ON pt.user_id = pm.user_id
+ORDER BY trimp_sum DESC, u."LastName", u."FirstName"
+LIMIT 100;
+```
+
+#### SubTask 7.6:
+
+Всё тоже самое, что и в 7.3, только не `BanisterTRIMP`, а `EstimatedPaeeKcal`
+
+#### SubTask 7.7:
+
+Запрос:
+```SQL
+WITH marathon AS (
+    SELECT
+        m."Id",
+        m."StartDate"::date AS start_date,
+        m."EndDate"::date AS end_date
+    FROM "Marathons" m
+    WHERE m."Name" = {{maraphon_name}}
+),
+activity_types AS (
+    SELECT
+        pat."Id" AS type_id,
+        pat."Name" AS type_name
+    FROM "PhysicalActivityTypes" pat
+    JOIN "MarathonPhysicalActivityType" mpat
+        ON mpat."PhysicalActivityTypesId" = pat."Id"
+    JOIN marathon m
+        ON mpat."MarathonsId" = m."Id"
+),
+type_trimp AS (
+    SELECT
+        at.type_id,
+        at.type_name,
+        SUM(pae."BanisterTRIMP") AS trimp_sum
+    FROM activity_types at
+    JOIN "PhysicalActivityEntries" pae
+        ON pae."PhysicalActivityTypeId" = at.type_id
+    JOIN marathon m
+        ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
+    GROUP BY at.type_id, at.type_name
+),
+ranked AS (
+    SELECT
+        ROW_NUMBER() OVER (
+            ORDER BY COALESCE(tt.trimp_sum, 0) DESC, tt.type_name
+        ) AS place,
+        tt.type_name,
+        COALESCE(tt.trimp_sum, 0) AS trimp_sum
+    FROM type_trimp tt
+)
+SELECT
+    place,
+    type_name,
+    trimp_sum
+FROM ranked
+ORDER BY place
+LIMIT 10;
+```
+
+#### SubTask 7.8:
+
+Всё тоже самое, что и в 7.7, только не `BanisterTRIMP`, а `EstimatedPaeeKcal`
