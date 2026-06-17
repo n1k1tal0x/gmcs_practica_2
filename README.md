@@ -133,3 +133,67 @@ LEFT JOIN activity_by_team_day a
    AND a.day = d.day
 ORDER BY t.team_name, d.day;
 ```
+
+Вот итоговая формула, изменил фильтр по имени, т.к. не разобрался как выбирать имя, а подставлялся чтобы Id:
+```
+WITH marathon AS (
+    SELECT
+        m."Id",
+        m."Name",
+        m."StartDate"::date AS start_date,
+        m."EndDate"::date AS end_date
+    FROM "Marathons" m
+    WHERE m."Name" = {{maraphon_name}}
+),
+days AS (
+    SELECT generate_series(
+        (SELECT start_date FROM marathon),
+        (SELECT end_date FROM marathon),
+        interval '1 day'
+    )::date AS day
+),
+teams AS (
+    SELECT
+        t."Id" AS team_id,
+        t."Name" AS team_name
+    FROM "Teams" t
+    JOIN marathon m ON t."MarathonId" = m."Id"
+),
+team_members AS (
+    SELECT
+        t.team_id,
+        t.team_name,
+        ut."MembersId" AS user_id
+    FROM teams t
+    JOIN "UserTeam" ut ON ut."TeamId" = t.team_id
+),
+activity_by_team_day AS (
+    SELECT
+        tm.team_id,
+        tm.team_name,
+        pae."ActivityDate"::date AS day,
+        SUM(pae."BanisterTRIMP") AS trimp_sum
+    FROM team_members tm
+    JOIN "PhysicalActivityEntries" pae
+        ON pae."UserId" = tm.user_id
+    JOIN marathon m
+        ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
+    GROUP BY tm.team_id, tm.team_name, pae."ActivityDate"::date
+)
+SELECT
+    t.team_id,
+    t.team_name,
+    d.day,
+    COALESCE(a.trimp_sum, 0) AS trimp_sum
+FROM teams t
+CROSS JOIN days d
+LEFT JOIN activity_by_team_day a
+    ON a.team_id = t.team_id
+   AND a.day = d.day
+ORDER BY t.team_name, d.day;
+```
+
+#### SubTask 7.2:
+
+Всё тоже самое, что и в 7.1, только не `BanisterTRIMP`, а `EstimatedPaeeKcal`
