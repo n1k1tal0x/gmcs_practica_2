@@ -141,9 +141,12 @@ SELECT
     t.duration_base
         + (((d.day_idx + tm.team_id) % 4) - 1) * 1.5 AS "DurationMinutes",
     (d.day::timestamp + make_interval(hours => (tm.user_id % 6) * 2 + 6))::timestamptz AS "CreatedOn",
-    t.kcal_base
-        + (d.day_idx * 6)
-        + (tm.team_id * 3) AS "EstimatedPaeeKcal",
+    round((
+        t.kcal_base
+        + ((d.day_idx % 6) - 2) * 18
+        + cos((d.day_idx + tm.team_id) / 3.2) * 24
+        + sin((d.day_idx + tm.user_id) / 4.5) * 18
+    )::numeric, 1) AS "EstimatedPaeeKcal",
     t.kcal_per_kg
         + ((d.day_idx % 7) * 0.02)
         - 0.04 AS "EstimatedPaeePerKg",
