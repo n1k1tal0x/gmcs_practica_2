@@ -99,7 +99,7 @@ teams AS (
     FROM "Teams"
     JOIN marathon m ON "Teams"."MarathonId" = m."Id"
     WHERE 1 = 1
-      -- Metabase Field Filter (optional): Teams -> Name
+      -- Metabase Field Filter (optional, multi-select): Teams -> Name
       [[AND {{team_name}}]]
 ),
 team_members AS (
@@ -164,7 +164,7 @@ teams AS (
     FROM "Teams"
     JOIN marathon m ON "Teams"."MarathonId" = m."Id"
     WHERE 1 = 1
-      -- Metabase Field Filter (optional): Teams -> Name
+      -- Metabase Field Filter (optional, multi-select): Teams -> Name
       [[AND {{team_name}}]]
 ),
 team_members AS (
@@ -228,6 +228,9 @@ team_members AS (
     FROM "Teams" t
     JOIN marathon m ON t."MarathonId" = m."Id"
     JOIN "UserTeam" ut ON ut."TeamId" = t."Id"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional, multi-select): Teams -> Name
+      [[AND {{team_name}}]]
 ),
 team_trimp AS (
     SELECT
@@ -278,7 +281,7 @@ participant_members AS (
     JOIN "UserTeam" ut ON ut."TeamId" = "Teams"."Id"
     JOIN marathon m ON m."Id" = "Teams"."MarathonId"
     WHERE 1 = 1
-      -- Metabase Field Filter (optional): Teams -> Name
+      -- Metabase Field Filter (optional, multi-select): Teams -> Name
       [[AND {{team_name}}]]
 ),
 participant_trimp AS (
@@ -324,6 +327,16 @@ WITH marathon AS (
     FROM "Marathons" m
     WHERE m."Name" = {{maraphon_name}}
 ),
+team_members AS (
+    SELECT DISTINCT
+        ut."MembersId" AS user_id
+    FROM "Teams" t
+    JOIN "UserTeam" ut ON ut."TeamId" = t."Id"
+    JOIN marathon m ON m."Id" = t."MarathonId"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional, multi-select): Teams -> Name
+      [[AND {{team_name}}]]
+),
 activity_types AS (
     SELECT
         pat."Id" AS type_id,
@@ -342,6 +355,8 @@ type_trimp AS (
     FROM activity_types at
     JOIN "PhysicalActivityEntries"
         ON "PhysicalActivityEntries"."PhysicalActivityTypeId" = at.type_id
+    JOIN team_members tm
+        ON tm.user_id = "PhysicalActivityEntries"."UserId"
     JOIN marathon m
         ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
     WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
@@ -377,7 +392,16 @@ LIMIT 10;
 
 Запрос:
 ```SQL
-WITH activity_posts AS (
+WITH team_members AS (
+    SELECT DISTINCT
+        ut."MembersId" AS user_id
+    FROM "Teams" t
+    JOIN "UserTeam" ut ON ut."TeamId" = t."Id"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional, multi-select): Teams -> Name
+      [[AND {{team_name}}]]
+),
+activity_posts AS (
     SELECT
         "PhysicalActivityEntries"."Id" AS activity_id,
         "PhysicalActivityEntries"."ActivityDate",
@@ -387,6 +411,8 @@ WITH activity_posts AS (
         p."Title",
         p."Description"
     FROM "PhysicalActivityEntries"
+    JOIN team_members tm
+        ON tm.user_id = "PhysicalActivityEntries"."UserId"
     JOIN "Posts" p
         ON p."PhysicalActivityEntryId" = "PhysicalActivityEntries"."Id"
     WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
@@ -440,6 +466,16 @@ WITH marathon AS (
         m."EndDate"::date AS end_date
     FROM "Marathons" m
     WHERE m."Name" = {{marathon_name}}
+),
+team_members AS (
+    SELECT DISTINCT
+        ut."MembersId" AS user_id
+    FROM "Teams" t
+    JOIN "UserTeam" ut ON ut."TeamId" = t."Id"
+    JOIN marathon m ON m."Id" = t."MarathonId"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional, multi-select): Teams -> Name
+      [[AND {{team_name}}]]
 )
 SELECT
     "PhysicalActivityEntries"."Id" AS activity_id,
@@ -452,6 +488,8 @@ SELECT
     "PhysicalActivityEntries"."EstimatedPaeeKcal",
     "PhysicalActivityEntries"."BanisterTRIMP"
 FROM "PhysicalActivityEntries"
+JOIN team_members tm
+    ON tm.user_id = "PhysicalActivityEntries"."UserId"
 JOIN marathon m
     ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
 JOIN "Users" u
