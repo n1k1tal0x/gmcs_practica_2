@@ -222,12 +222,12 @@ WITH marathon AS (
 ),
 team_members AS (
     SELECT
-        t."Id" AS team_id,
-        t."Name" AS team_name,
+        "Teams"."Id" AS team_id,
+        "Teams"."Name" AS team_name,
         ut."MembersId" AS user_id
-    FROM "Teams" t
-    JOIN marathon m ON t."MarathonId" = m."Id"
-    JOIN "UserTeam" ut ON ut."TeamId" = t."Id"
+    FROM "Teams"
+    JOIN marathon m ON "Teams"."MarathonId" = m."Id"
+    JOIN "UserTeam" ut ON ut."TeamId" = "Teams"."Id"
     WHERE 1 = 1
       -- Metabase Field Filter (optional, multi-select): Teams -> Name
       [[AND {{team_name}}]]
