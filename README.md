@@ -346,6 +346,9 @@ activity_types AS (
         ON mpat."PhysicalActivityTypesId" = pat."Id"
     JOIN marathon m
         ON mpat."MarathonsId" = m."Id"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional, multi-select): PhysicalActivityTypes -> Name
+      [[AND {{activity_type_name}}]]
 ),
 type_trimp AS (
     SELECT
@@ -401,18 +404,30 @@ WITH team_members AS (
       -- Metabase Field Filter (optional, multi-select): Teams -> Name
       [[AND {{team_name}}]]
 ),
+activity_types AS (
+    SELECT
+        "PhysicalActivityTypes"."Id" AS type_id,
+        "PhysicalActivityTypes"."Name" AS type_name
+    FROM "PhysicalActivityTypes"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional, multi-select): PhysicalActivityTypes -> Name
+      [[AND {{activity_type_name}}]]
+),
 activity_posts AS (
     SELECT
         "PhysicalActivityEntries"."Id" AS activity_id,
         "PhysicalActivityEntries"."ActivityDate",
         "PhysicalActivityEntries"."EstimatedPaeeKcal",
         "PhysicalActivityEntries"."BanisterTRIMP",
+        at.type_name AS activity_type_name,
         p."Id" AS post_id,
         p."Title",
         p."Description"
     FROM "PhysicalActivityEntries"
     JOIN team_members tm
         ON tm.user_id = "PhysicalActivityEntries"."UserId"
+    JOIN activity_types at
+        ON at.type_id = "PhysicalActivityEntries"."PhysicalActivityTypeId"
     JOIN "Posts" p
         ON p."PhysicalActivityEntryId" = "PhysicalActivityEntries"."Id"
     WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
@@ -425,6 +440,7 @@ post_likes AS (
         ap."ActivityDate",
         ap."EstimatedPaeeKcal",
         ap."BanisterTRIMP",
+        ap.activity_type_name,
         ap.post_id,
         ap."Title",
         ap."Description",
@@ -437,6 +453,7 @@ post_likes AS (
         ap."ActivityDate",
         ap."EstimatedPaeeKcal",
         ap."BanisterTRIMP",
+        ap.activity_type_name,
         ap.post_id,
         ap."Title",
         ap."Description"
@@ -449,6 +466,7 @@ SELECT
     "ActivityDate",
     "EstimatedPaeeKcal",
     "BanisterTRIMP",
+    activity_type_name,
     likes_count
 FROM post_likes
 ORDER BY likes_count DESC, "ActivityDate" DESC
@@ -484,7 +502,7 @@ SELECT
     u."FirstName",
     u."LastName",
     "PhysicalActivityEntries"."PhysicalActivityTypeId",
-    pat."Name" AS activity_type_name,
+    "PhysicalActivityTypes"."Name" AS activity_type_name,
     "PhysicalActivityEntries"."EstimatedPaeeKcal",
     "PhysicalActivityEntries"."BanisterTRIMP"
 FROM "PhysicalActivityEntries"
@@ -494,9 +512,11 @@ JOIN marathon m
     ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
 JOIN "Users" u
     ON u."Id" = "PhysicalActivityEntries"."UserId"
-LEFT JOIN "PhysicalActivityTypes" pat
-    ON pat."Id" = "PhysicalActivityEntries"."PhysicalActivityTypeId"
+LEFT JOIN "PhysicalActivityTypes"
+    ON "PhysicalActivityTypes"."Id" = "PhysicalActivityEntries"."PhysicalActivityTypeId"
 WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
+  -- Metabase Field Filter (optional, multi-select): PhysicalActivityTypes -> Name
+  [[AND {{activity_type_name}}]]
   -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
   [[AND {{activity_date}}]]
 ORDER BY "PhysicalActivityEntries"."ActivityDate" DESC, "PhysicalActivityEntries"."Id" DESC;
