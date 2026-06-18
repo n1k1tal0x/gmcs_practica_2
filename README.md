@@ -119,8 +119,8 @@ activity_by_team_day AS (
     JOIN marathon m
         ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
     WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Field Filter: PhysicalActivityEntries -> ActivityDate
-      [[AND {{activity_date}}]]
+      -- Metabase Date parameter: activity_date (single date)
+      [[AND pae."ActivityDate"::date = {{activity_date}}]]
     GROUP BY tm.team_id, tm.team_name, pae."ActivityDate"::date
 )
 SELECT
@@ -181,8 +181,8 @@ activity_by_team_day AS (
     JOIN marathon m
         ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
     WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Field Filter: PhysicalActivityEntries -> ActivityDate
-      [[AND {{activity_date}}]]
+      -- Metabase Date parameter: activity_date (single date)
+      [[AND pae."ActivityDate"::date = {{activity_date}}]]
     GROUP BY tm.team_id, tm.team_name, pae."ActivityDate"::date
 )
 SELECT
@@ -234,8 +234,8 @@ team_trimp AS (
     JOIN marathon m
         ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
     WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Field Filter: PhysicalActivityEntries -> ActivityDate
-      [[AND {{activity_date}}]]
+      -- Metabase Date parameter: activity_date (single date)
+      [[AND pae."ActivityDate"::date = {{activity_date}}]]
     GROUP BY tm.team_id, tm.team_name
 )
 SELECT
@@ -282,8 +282,8 @@ participant_trimp AS (
     JOIN marathon m
         ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
     WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Field Filter: PhysicalActivityEntries -> ActivityDate
-      [[AND {{activity_date}}]]
+      -- Metabase Date parameter: activity_date (single date)
+      [[AND pae."ActivityDate"::date = {{activity_date}}]]
     GROUP BY pm.user_id
 )
 SELECT
@@ -336,8 +336,8 @@ type_trimp AS (
     JOIN marathon m
         ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
     WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Field Filter: PhysicalActivityEntries -> ActivityDate
-      [[AND {{activity_date}}]]
+      -- Metabase Date parameter: activity_date (single date)
+      [[AND pae."ActivityDate"::date = {{activity_date}}]]
     GROUP BY at.type_id, at.type_name
 ),
 ranked AS (
@@ -381,8 +381,8 @@ WITH activity_posts AS (
     JOIN "Posts" p
         ON p."PhysicalActivityEntryId" = pae."Id"
     WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Field Filter: PhysicalActivityEntries -> ActivityDate
-      [[AND {{activity_date}}]]
+      -- Metabase Date parameter: activity_date (single date)
+      [[AND pae."ActivityDate"::date = {{activity_date}}]]
 ),
 post_likes AS (
     SELECT
@@ -450,7 +450,7 @@ JOIN "Users" u
 LEFT JOIN "PhysicalActivityTypes" pat
     ON pat."Id" = pae."PhysicalActivityTypeId"
 WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-  -- Metabase Field Filter: PhysicalActivityEntries -> ActivityDate
-  [[AND {{activity_date}}]]
+  -- Metabase Date parameter: activity_date (single date)
+  [[AND pae."ActivityDate"::date = {{activity_date}}]]
 ORDER BY pae."ActivityDate" DESC, pae."Id" DESC;
 ```
