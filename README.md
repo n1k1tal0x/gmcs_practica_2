@@ -111,17 +111,17 @@ activity_by_team_day AS (
     SELECT
         tm.team_id,
         tm.team_name,
-        pae."ActivityDate"::date AS day,
-        SUM(pae."BanisterTRIMP") AS trimp_sum
+        "PhysicalActivityEntries"."ActivityDate"::date AS day,
+        SUM("PhysicalActivityEntries"."BanisterTRIMP") AS trimp_sum
     FROM team_members tm
-    JOIN "PhysicalActivityEntries" pae
-        ON pae."UserId" = tm.user_id
+    JOIN "PhysicalActivityEntries"
+        ON "PhysicalActivityEntries"."UserId" = tm.user_id
     JOIN marathon m
-        ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
-    WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Date parameter: activity_date (single date)
-      [[AND pae."ActivityDate"::date = {{activity_date}}]]
-    GROUP BY tm.team_id, tm.team_name, pae."ActivityDate"::date
+        ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
+      -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
+      [[AND {{activity_date}}]]
+    GROUP BY tm.team_id, tm.team_name, "PhysicalActivityEntries"."ActivityDate"::date
 )
 SELECT
     t.team_id,
@@ -173,17 +173,17 @@ activity_by_team_day AS (
     SELECT
         tm.team_id,
         tm.team_name,
-        pae."ActivityDate"::date AS day,
-        SUM(pae."BanisterTRIMP") AS trimp_sum
+        "PhysicalActivityEntries"."ActivityDate"::date AS day,
+        SUM("PhysicalActivityEntries"."BanisterTRIMP") AS trimp_sum
     FROM team_members tm
-    JOIN "PhysicalActivityEntries" pae
-        ON pae."UserId" = tm.user_id
+    JOIN "PhysicalActivityEntries"
+        ON "PhysicalActivityEntries"."UserId" = tm.user_id
     JOIN marathon m
-        ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
-    WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Date parameter: activity_date (single date)
-      [[AND pae."ActivityDate"::date = {{activity_date}}]]
-    GROUP BY tm.team_id, tm.team_name, pae."ActivityDate"::date
+        ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
+      -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
+      [[AND {{activity_date}}]]
+    GROUP BY tm.team_id, tm.team_name, "PhysicalActivityEntries"."ActivityDate"::date
 )
 SELECT
     t.team_id,
@@ -227,15 +227,15 @@ team_trimp AS (
     SELECT
         tm.team_id,
         tm.team_name,
-        SUM(pae."BanisterTRIMP") AS trimp_sum
+        SUM("PhysicalActivityEntries"."BanisterTRIMP") AS trimp_sum
     FROM team_members tm
-    JOIN "PhysicalActivityEntries" pae
-        ON pae."UserId" = tm.user_id
+    JOIN "PhysicalActivityEntries"
+        ON "PhysicalActivityEntries"."UserId" = tm.user_id
     JOIN marathon m
-        ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
-    WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Date parameter: activity_date (single date)
-      [[AND pae."ActivityDate"::date = {{activity_date}}]]
+        ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
+      -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
+      [[AND {{activity_date}}]]
     GROUP BY tm.team_id, tm.team_name
 )
 SELECT
@@ -275,15 +275,15 @@ participant_members AS (
 participant_trimp AS (
     SELECT
         pm.user_id,
-        SUM(pae."BanisterTRIMP") AS trimp_sum
+        SUM("PhysicalActivityEntries"."BanisterTRIMP") AS trimp_sum
     FROM participant_members pm
-    JOIN "PhysicalActivityEntries" pae
-        ON pae."UserId" = pm.user_id
+    JOIN "PhysicalActivityEntries"
+        ON "PhysicalActivityEntries"."UserId" = pm.user_id
     JOIN marathon m
-        ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
-    WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Date parameter: activity_date (single date)
-      [[AND pae."ActivityDate"::date = {{activity_date}}]]
+        ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
+      -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
+      [[AND {{activity_date}}]]
     GROUP BY pm.user_id
 )
 SELECT
@@ -329,15 +329,15 @@ type_trimp AS (
     SELECT
         at.type_id,
         at.type_name,
-        SUM(pae."BanisterTRIMP") AS trimp_sum
+        SUM("PhysicalActivityEntries"."BanisterTRIMP") AS trimp_sum
     FROM activity_types at
-    JOIN "PhysicalActivityEntries" pae
-        ON pae."PhysicalActivityTypeId" = at.type_id
+    JOIN "PhysicalActivityEntries"
+        ON "PhysicalActivityEntries"."PhysicalActivityTypeId" = at.type_id
     JOIN marathon m
-        ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
-    WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Date parameter: activity_date (single date)
-      [[AND pae."ActivityDate"::date = {{activity_date}}]]
+        ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
+      -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
+      [[AND {{activity_date}}]]
     GROUP BY at.type_id, at.type_name
 ),
 ranked AS (
@@ -370,19 +370,19 @@ LIMIT 10;
 ```SQL
 WITH activity_posts AS (
     SELECT
-        pae."Id" AS activity_id,
-        pae."ActivityDate",
-        pae."EstimatedPaeeKcal",
-        pae."BanisterTRIMP",
+        "PhysicalActivityEntries"."Id" AS activity_id,
+        "PhysicalActivityEntries"."ActivityDate",
+        "PhysicalActivityEntries"."EstimatedPaeeKcal",
+        "PhysicalActivityEntries"."BanisterTRIMP",
         p."Id" AS post_id,
         p."Title",
         p."Description"
-    FROM "PhysicalActivityEntries" pae
+    FROM "PhysicalActivityEntries"
     JOIN "Posts" p
-        ON p."PhysicalActivityEntryId" = pae."Id"
-    WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-      -- Metabase Date parameter: activity_date (single date)
-      [[AND pae."ActivityDate"::date = {{activity_date}}]]
+        ON p."PhysicalActivityEntryId" = "PhysicalActivityEntries"."Id"
+    WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
+      -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
+      [[AND {{activity_date}}]]
 ),
 post_likes AS (
     SELECT
@@ -433,24 +433,24 @@ WITH marathon AS (
     WHERE m."Name" = {{marathon_name}}
 )
 SELECT
-    pae."Id" AS activity_id,
-    pae."ActivityDate",
-    pae."UserId",
+    "PhysicalActivityEntries"."Id" AS activity_id,
+    "PhysicalActivityEntries"."ActivityDate",
+    "PhysicalActivityEntries"."UserId",
     u."FirstName",
     u."LastName",
-    pae."PhysicalActivityTypeId",
+    "PhysicalActivityEntries"."PhysicalActivityTypeId",
     pat."Name" AS activity_type_name,
-    pae."EstimatedPaeeKcal",
-    pae."BanisterTRIMP"
-FROM "PhysicalActivityEntries" pae
+    "PhysicalActivityEntries"."EstimatedPaeeKcal",
+    "PhysicalActivityEntries"."BanisterTRIMP"
+FROM "PhysicalActivityEntries"
 JOIN marathon m
-    ON pae."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
 JOIN "Users" u
-    ON u."Id" = pae."UserId"
+    ON u."Id" = "PhysicalActivityEntries"."UserId"
 LEFT JOIN "PhysicalActivityTypes" pat
-    ON pat."Id" = pae."PhysicalActivityTypeId"
-WHERE pae."IsInvalid" IS DISTINCT FROM TRUE
-  -- Metabase Date parameter: activity_date (single date)
-  [[AND pae."ActivityDate"::date = {{activity_date}}]]
-ORDER BY pae."ActivityDate" DESC, pae."Id" DESC;
+    ON pat."Id" = "PhysicalActivityEntries"."PhysicalActivityTypeId"
+WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
+  -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
+  [[AND {{activity_date}}]]
+ORDER BY "PhysicalActivityEntries"."ActivityDate" DESC, "PhysicalActivityEntries"."Id" DESC;
 ```
