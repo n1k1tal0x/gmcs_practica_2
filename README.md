@@ -94,10 +94,13 @@ days AS (
 ),
 teams AS (
     SELECT
-        t."Id" AS team_id,
-        t."Name" AS team_name
-    FROM "Teams" t
-    JOIN marathon m ON t."MarathonId" = m."Id"
+        "Teams"."Id" AS team_id,
+        "Teams"."Name" AS team_name
+    FROM "Teams"
+    JOIN marathon m ON "Teams"."MarathonId" = m."Id"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional): Teams -> Name
+      [[AND {{team_name}}]]
 ),
 team_members AS (
     SELECT
@@ -156,10 +159,13 @@ days AS (
 ),
 teams AS (
     SELECT
-        t."Id" AS team_id,
-        t."Name" AS team_name
-    FROM "Teams" t
-    JOIN marathon m ON t."MarathonId" = m."Id"
+        "Teams"."Id" AS team_id,
+        "Teams"."Name" AS team_name
+    FROM "Teams"
+    JOIN marathon m ON "Teams"."MarathonId" = m."Id"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional): Teams -> Name
+      [[AND {{team_name}}]]
 ),
 team_members AS (
     SELECT
@@ -268,9 +274,12 @@ WITH marathon AS (
 participant_members AS (
     SELECT DISTINCT
         ut."MembersId" AS user_id
-    FROM "Teams" t
-    JOIN "UserTeam" ut ON ut."TeamId" = t."Id"
-    JOIN marathon m ON m."Id" = t."MarathonId"
+    FROM "Teams"
+    JOIN "UserTeam" ut ON ut."TeamId" = "Teams"."Id"
+    JOIN marathon m ON m."Id" = "Teams"."MarathonId"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional): Teams -> Name
+      [[AND {{team_name}}]]
 ),
 participant_trimp AS (
     SELECT
