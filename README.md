@@ -492,8 +492,8 @@ LIMIT 10;
 WITH team_members AS (
     SELECT DISTINCT
         ut."MembersId" AS user_id
-    FROM "Teams" t
-    JOIN "UserTeam" ut ON ut."TeamId" = t."Id"
+    FROM "Teams"
+    JOIN "UserTeam" ut ON ut."TeamId" = "Teams"."Id"
     WHERE 1 = 1
       -- Metabase Field Filter (optional, multi-select): Teams -> Name
       [[AND {{team_name}}]]
@@ -582,39 +582,83 @@ WITH marathon AS (
 team_members AS (
     SELECT DISTINCT
         ut."MembersId" AS user_id
-    FROM "Teams" t
-    JOIN "UserTeam" ut ON ut."TeamId" = t."Id"
-    JOIN marathon m ON m."Id" = t."MarathonId"
+    FROM "Teams"
+    JOIN "UserTeam" ut ON ut."TeamId" = "Teams"."Id"
+    JOIN marathon m ON m."Id" = "Teams"."MarathonId"
     WHERE 1 = 1
       -- Metabase Field Filter (optional, multi-select): Teams -> Name
       [[AND {{team_name}}]]
+),
+activity_types AS (
+    SELECT
+        "PhysicalActivityTypes"."Id" AS type_id,
+        "PhysicalActivityTypes"."Name" AS type_name
+    FROM "PhysicalActivityTypes"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional, multi-select): PhysicalActivityTypes -> Name
+      [[AND {{activity_type_name}}]]
+),
+activity_posts AS (
+    SELECT
+        "PhysicalActivityEntries"."Id" AS activity_id,
+        "PhysicalActivityEntries"."ActivityDate",
+        "PhysicalActivityEntries"."UserId",
+        u."FirstName",
+        u."LastName",
+        "PhysicalActivityEntries"."PhysicalActivityTypeId",
+        at.type_name AS activity_type_name,
+        "PhysicalActivityEntries"."EstimatedPaeeKcal",
+        "PhysicalActivityEntries"."BanisterTRIMP"
+    FROM "PhysicalActivityEntries"
+    JOIN team_members tm
+        ON tm.user_id = "PhysicalActivityEntries"."UserId"
+    JOIN activity_types at
+        ON at.type_id = "PhysicalActivityEntries"."PhysicalActivityTypeId"
+    JOIN marathon m
+        ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    JOIN "Users" u
+        ON u."Id" = "PhysicalActivityEntries"."UserId"
+    WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
+      -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
+      [[AND {{activity_date}}]]
+),
+post_likes AS (
+    SELECT
+        ap.activity_id,
+        ap."ActivityDate",
+        ap."UserId",
+        ap."FirstName",
+        ap."LastName",
+        ap."PhysicalActivityTypeId",
+        ap.activity_type_name,
+        ap."EstimatedPaeeKcal",
+        ap."BanisterTRIMP",
+        COUNT(pl."UserId") AS likes_count
+    FROM activity_posts ap
+    LEFT JOIN "PostLikes" pl
+        ON pl."PostId" = ap.activity_id
+    GROUP BY
+        ap.activity_id,
+        ap."ActivityDate",
+        ap."UserId",
+        ap."FirstName",
+        ap."LastName",
+        ap."PhysicalActivityTypeId",
+        ap.activity_type_name,
+        ap."EstimatedPaeeKcal",
+        ap."BanisterTRIMP"
 )
 SELECT
-    "PhysicalActivityEntries"."Id" AS activity_id,
-    "PhysicalActivityEntries"."ActivityDate",
-    "PhysicalActivityEntries"."UserId",
-    u."FirstName",
-    u."LastName",
-    "PhysicalActivityEntries"."PhysicalActivityTypeId",
-    "PhysicalActivityTypes"."Name" AS activity_type_name,
-    "PhysicalActivityEntries"."EstimatedPaeeKcal",
-    "PhysicalActivityEntries"."BanisterTRIMP"
-FROM "PhysicalActivityEntries"
-JOIN team_members tm
-    ON tm.user_id = "PhysicalActivityEntries"."UserId"
-JOIN marathon m
-    ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
-JOIN "Users" u
-    ON u."Id" = "PhysicalActivityEntries"."UserId"
-LEFT JOIN "PhysicalActivityTypes"
-    ON "PhysicalActivityTypes"."Id" = "PhysicalActivityEntries"."PhysicalActivityTypeId"
-WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
-  -- Metabase Field Filter (optional, multi-select): Teams -> Name
-  [[AND {{team_name}}]]
-  -- Metabase Field Filter (optional, multi-select): PhysicalActivityTypes -> Name
-  [[AND {{activity_type_name}}]]
-  -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
-  [[AND {{activity_date}}]]
-ORDER BY "PhysicalActivityEntries"."ActivityDate" DESC, "PhysicalActivityEntries"."Id" DESC;
+    activity_id,
+    'http://sitename/posts/' || activity_id AS post_url,
+    "FirstName",
+    "LastName",
+    "ActivityDate",
+    activity_type_name,
+    "EstimatedPaeeKcal",
+    "BanisterTRIMP",
+    likes_count
+FROM post_likes
+ORDER BY likes_count DESC, "ActivityDate" DESC
+LIMIT 100;
 ```
-
