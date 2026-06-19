@@ -195,11 +195,15 @@ activity_by_team_day AS (
     FROM team_members tm
     JOIN "PhysicalActivityEntries"
         ON "PhysicalActivityEntries"."UserId" = tm.user_id
+    JOIN "PhysicalActivityTypes"
+        ON "PhysicalActivityTypes"."Id" = "PhysicalActivityEntries"."PhysicalActivityTypeId"
     JOIN marathon m
         ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
     WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
       -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
       [[AND {{activity_date}}]]
+      -- Metabase Field Filter (optional, multi-select): PhysicalActivityTypes -> Name
+      [[AND {{activity_type_name}}]]
     GROUP BY tm.team_id, tm.team_name, "PhysicalActivityEntries"."ActivityDate"::date
 )
 SELECT
@@ -229,7 +233,7 @@ WITH marathon AS (
         m."StartDate"::date AS start_date,
         m."EndDate"::date AS end_date
     FROM "Marathons" m
-    WHERE m."Id" = 1
+    WHERE m."Name" = {{maraphon_name}}
 ),
 team_members AS (
     SELECT
