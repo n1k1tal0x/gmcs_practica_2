@@ -1,4 +1,4 @@
-### Task 1: Сделал запуск в docker-compose
+﻿### Task 1: Сделал запуск в docker-compose
 
 ### Task 2: Вместе с запуском postgres импортирует dump
 
@@ -286,7 +286,62 @@ LIMIT 10;
 
 #### SubTask 7.4:
 
-Всё тоже самое, что и в 7.3, только не `BanisterTRIMP`, а `EstimatedPaeeKcal`
+Запрос:
+```SQL
+WITH marathon AS (
+    SELECT
+        m."Id",
+        m."StartDate"::date AS start_date,
+        m."EndDate"::date AS end_date
+    FROM "Marathons" m
+    WHERE m."Name" = {{maraphon_name}}
+),
+team_members AS (
+    SELECT
+        "Teams"."Id" AS team_id,
+        "Teams"."Name" AS team_name,
+        ut."MembersId" AS user_id
+    FROM "Teams"
+    JOIN marathon m ON "Teams"."MarathonId" = m."Id"
+    JOIN "UserTeam" ut ON ut."TeamId" = "Teams"."Id"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional, multi-select): Teams -> Name
+      [[AND {{team_name}}]]
+),
+activity_types AS (
+    SELECT
+        "PhysicalActivityTypes"."Id" AS type_id,
+        "PhysicalActivityTypes"."Name" AS type_name
+    FROM "PhysicalActivityTypes"
+    WHERE 1 = 1
+      -- Metabase Field Filter (optional, multi-select): PhysicalActivityTypes -> Name
+      [[AND {{activity_type_name}}]]
+),
+team_trimp AS (
+    SELECT
+        tm.team_id,
+        tm.team_name,
+        SUM("PhysicalActivityEntries"."EstimatedPaeeKcal") AS trimp_sum
+    FROM team_members tm
+    JOIN "PhysicalActivityEntries"
+        ON "PhysicalActivityEntries"."UserId" = tm.user_id
+    JOIN activity_types at
+        ON at.type_id = "PhysicalActivityEntries"."PhysicalActivityTypeId"
+    JOIN marathon m
+        ON "PhysicalActivityEntries"."ActivityDate"::date BETWEEN m.start_date AND m.end_date
+    WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
+      -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
+      [[AND {{activity_date}}]]
+    GROUP BY tm.team_id, tm.team_name
+)
+SELECT
+    team_id,
+    team_name,
+    trimp_sum
+FROM team_trimp
+ORDER BY trimp_sum DESC, team_name
+LIMIT 10;
+```
 
 #### SubTask 7.5:
 
@@ -297,8 +352,8 @@ WITH marathon AS (
         m."Id",
         m."StartDate"::date AS start_date,
         m."EndDate"::date AS end_date
-    FROM "Marathons" m
-    WHERE m."Name" = 'Summer Pace Marathon'
+FROM "Marathons" m
+    WHERE m."Name" = {{maraphon_name}}
 ),
 participant_members AS (
     SELECT DISTINCT
@@ -333,6 +388,8 @@ participant_trimp AS (
     WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
       -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
       [[AND {{activity_date}}]]
+      -- Metabase Field Filter (optional, multi-select): PhysicalActivityTypes -> Name
+      [[AND {{activity_type_name}}]]
     GROUP BY pm.user_id
 )
 SELECT
@@ -552,9 +609,12 @@ JOIN "Users" u
 LEFT JOIN "PhysicalActivityTypes"
     ON "PhysicalActivityTypes"."Id" = "PhysicalActivityEntries"."PhysicalActivityTypeId"
 WHERE "PhysicalActivityEntries"."IsInvalid" IS DISTINCT FROM TRUE
+  -- Metabase Field Filter (optional, multi-select): Teams -> Name
+  [[AND {{team_name}}]]
   -- Metabase Field Filter (optional, multi-select): PhysicalActivityTypes -> Name
   [[AND {{activity_type_name}}]]
   -- Metabase Field Filter (optional): PhysicalActivityEntries -> ActivityDate
   [[AND {{activity_date}}]]
 ORDER BY "PhysicalActivityEntries"."ActivityDate" DESC, "PhysicalActivityEntries"."Id" DESC;
 ```
+
